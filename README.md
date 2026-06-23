@@ -4,5 +4,5 @@ Este é um jogo de quiz de matemática super divertido, criado especialmente par
 **Banco de Perguntas:** Mais de 200 questões simples e com opções de múltipla escolha. * 
 **Competição:** Os jogadores colocam seus nomes e participam de um ranking por sala de aula. * 
 **Visual:** Interface criativa, colorida e muito fácil de entender. * 
-**Segurança:** O sistema tenta identificar e barrar nomes impróprios. ## 👩‍💻 Desenvolvimento Este projeto foi idealizado e desenvolvido pela 
-**Prof. Fernanda**
+**Segurança:** O sistema tenta identificar e barrar nomes impróprios. 
+## 👩‍💻 Desenvolvimento Este projeto foi idealizado e desenvolvido pela **Prof. Fernanda**
