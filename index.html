@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Super Quiz de Matemática - 7º Ano</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts para estilo lúdico -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: linear-gradient(135deg, #EEF2F3 0%, #D5E0F2 100%);
+    }
+    .font-kids {
+      font-family: 'Fredoka', sans-serif;
+    }
+    .custom-shadow {
+      box-shadow: 0 8px 0px 0px rgba(0, 0, 0, 0.1);
+    }
+    .btn-bounce:active {
+      transform: translateY(4px);
+    }
+    /* Estilos animados de confete no CSS */
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      animation: fall linear forwards;
+    }
+    @keyframes fall {
+      to {
+        transform: translateY(100vh) rotate(360deg);
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between overflow-x-hidden relative selection:bg-amber-200">
+
+  <!-- Música/Efeitos Sonoros Sintetizados usando Web Audio API (Sem dependência de arquivo externo) -->
+  <script>
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    
+    function playSound(type) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      if (type === 'correct') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, audioCtx.currentTime + 0.2); // G5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'wrong') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, audioCtx.currentTime); // A3
+        osc.frequency.setValueAtTime(147, audioCtx.currentTime + 0.15); // D3
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } else if (type === 'click') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      } else if (type === 'victory') {
+        osc.type = 'sine';
+        const notes = [523.25, 587.33, 659.25, 698.46, 783.99, 880.00, 987.77, 1046.50];
+        notes.forEach((freq, idx) => {
+          osc.frequency.setValueAtTime(freq, audioCtx.currentTime + (idx * 0.1));
+        });
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.0);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.0);
+      }
+    }
+  </script>
+
+  <!-- Cabeçalho Principal -->
+  <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white py-4 px-6 shadow-md relative z-10">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div class="flex items-center gap-3">
+        <span class="text-3xl sm:text-4xl">📐</span>
+        <div>
+          <h1 class="text-xl sm:text-2xl font-black font-kids tracking-wide">DESAFIO DOS NÚMEROS</h1>
+          <p class="text-xs text-purple-100 font-semibold uppercase tracking-wider">7º Ano - Ensino Fundamental</p>
+        </div>
+      </div>
+      <div class="text-center sm:text-right">
+        <div class="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold inline-block border border-white/20">
+          Desenvolvido pela <span class="text-yellow-300">Profª Fernanda</span> 👩‍🏫
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Container Principal -->
+  <main class="flex-grow max-w-4xl w-full mx-auto p-4 sm:p-6 flex flex-col justify-center relative z-10">
+    
+    <!-- Alerta Flutuante Personalizado (Substitui o alert padrão do navegador) -->
+    <div id="custom-alert" class="hidden fixed inset-0 flex items-center justify-center bg-black/60 z-50 p-4">
+      <div class="bg-white rounded-2xl p-6 max-w-sm w-full text-center border-4 border-rose-500 shadow-2xl animate-bounce">
+        <span class="text-5xl">⚠️</span>
+        <h3 class="text-xl font-bold text-gray-800 mt-3 font-kids">Nome Não Permitido!</h3>
+        <p id="alert-message" class="text-gray-600 mt-2 text-sm">Por favor, insira um nome de estudante válido para o sistema escolar.</p>
+        <button onclick="closeAlert()" class="mt-4 px-6 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold shadow-md transition-all">Entendido</button>
+      </div>
+    </div>
+
+    <!-- TELA 1: LOGIN E SELEÇÃO DE SALA -->
+    <section id="screen-login" class="bg-white rounded-3xl p-6 sm:p-10 shadow-xl border-4 border-purple-200 transition-all duration-300">
+      <div class="text-center mb-6">
+        <span class="text-6xl inline-block animate-pulse">🎯</span>
+        <h2 class="text-2xl sm:text-3xl font-black font-kids text-indigo-900 mt-3">Pronto para o Desafio?</h2>
+        <p class="text-gray-600 mt-1">Coloque seus dados abaixo para iniciar sua jornada matemática!</p>
+      </div>
+
+      <div class="space-y-4 max-w-md mx-auto">
+        <!-- Campo Nome -->
+        <div>
+          <label class="block text-gray-700 font-bold text-sm mb-1">Qual o seu Nome Completo?</label>
+          <input type="text" id="player-name" placeholder="Ex: Lucas Silva" 
+                 class="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 focus:border-indigo-500 focus:outline-none font-semibold text-lg text-gray-800 uppercase" />
+          <p class="text-xs text-gray-500 mt-1">Insira seu nome de estudante. Nomes inadequados ou falsos serão barrados.</p>
+        </div>
+
+        <!-- Campo Sala de Aula -->
+        <div>
+          <label class="block text-gray-700 font-bold text-sm mb-1">Escolha a sua Turma:</label>
+          <select id="player-class" class="w-full px-4 py-3 rounded-2xl border-2 border-gray-300 focus:border-indigo-500 focus:outline-none font-bold text-lg text-indigo-950 bg-white">
+            <option value="7º Ano A">7º Ano A</option>
+            <option value="7º Ano B">7º Ano B</option>
+            <option value="7º Ano C">7º Ano C</option>
+            <option value="7º Ano D">7º Ano D</option>
+            <option value="7º Ano E">7º Ano E</option>
+          </select>
+        </div>
+
+        <!-- Botão Iniciar -->
+        <button onclick="startQuiz()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black font-kids text-xl py-4 rounded-2xl custom-shadow border-b-4 border-emerald-700 btn-bounce transition-all flex items-center justify-center gap-2 mt-2">
+          JOGAR AGORA! 🚀
+        </button>
+      </div>
+    </section>
+
+    <!-- TELA 2: TELA DO QUIZ EM ANDAMENTO -->
+    <section id="screen-quiz" class="hidden bg-white rounded-3xl p-5 sm:p-8 shadow-xl border-4 border-indigo-200 transition-all duration-300 relative overflow-hidden">
+      <!-- Barra superior do Quiz -->
+      <div class="flex items-center justify-between border-b-2 border-gray-100 pb-3 mb-4">
+        <div class="flex items-center gap-2">
+          <div class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full font-extrabold text-sm">
+            Questão <span id="current-question-num">1</span> de 10
+          </div>
+          <span id="question-category" class="hidden sm:inline-block bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded font-bold uppercase"></span>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="text-right">
+            <span class="text-xs font-semibold text-gray-500">Pontuação:</span>
+            <div id="quiz-score" class="font-bold text-lg text-emerald-600">0 pts</div>
+          </div>
+          <div class="flex items-center gap-1 bg-rose-50 border border-rose-200 px-3 py-1 rounded-full text-rose-600 font-bold">
+            ⏱️ <span id="timer-display">30</span>s
+          </div>
+        </div>
+      </div>
+
+      <!-- Barra de progresso visual -->
+      <div class="w-full bg-gray-100 h-3 rounded-full mb-6 overflow-hidden">
+        <div id="progress-bar" class="bg-gradient-to-r from-indigo-500 to-pink-500 h-full w-0 transition-all duration-300"></div>
+      </div>
+
+      <!-- Enunciado da Questão -->
+      <div class="bg-indigo-50 rounded-2xl p-5 sm:p-6 mb-6 border border-indigo-100">
+        <h3 id="question-text" class="text-lg sm:text-xl font-bold text-indigo-950 leading-relaxed font-kids">
+          Carregando pergunta...
+        </h3>
+      </div>
+
+      <!-- Opções de resposta (A, B, C, D) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6" id="options-container">
+        <!-- Gerado via JavaScript -->
+      </div>
+
+      <!-- Feedback de Resposta Rápida -->
+      <div id="answer-feedback" class="hidden rounded-xl p-4 mb-4 text-center font-bold text-white transition-all">
+        {Feedback}
+      </div>
+
+      <!-- Botão Avançar -->
+      <div class="flex justify-end">
+        <button id="btn-next" onclick="nextQuestion()" disabled class="bg-gray-300 text-gray-500 cursor-not-allowed font-black font-kids text-lg px-8 py-3 rounded-xl border-b-4 border-gray-400 btn-bounce transition-all">
+          AVANÇAR ➡️
+        </button>
+      </div>
+    </section>
+
+    <!-- TELA 3: TELA DE RESULTADOS DO ALUNO -->
+    <section id="screen-results" class="hidden bg-white rounded-3xl p-6 sm:p-10 shadow-xl border-4 border-amber-300 text-center transition-all duration-300">
+      <div id="victory-banner" class="text-7xl mb-4 animate-bounce">🏆</div>
+      <h2 class="text-3xl font-black font-kids text-amber-900" id="result-greeting">Parabéns, Aluno!</h2>
+      <p class="text-gray-600 mt-2">Você concluiu o Desafio de Matemática da Profª Fernanda!</p>
+      
+      <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 my-6 max-w-sm mx-auto">
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="text-xs font-semibold text-gray-500 block uppercase">Acertos</span>
+            <span class="text-3xl font-extrabold text-indigo-900" id="result-hits">0/10</span>
+          </div>
+          <div>
+            <span class="text-xs font-semibold text-gray-500 block uppercase">Pontuação Final</span>
+            <span class="text-3xl font-extrabold text-emerald-600" id="result-points">0 pts</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+        <button onclick="restartGame()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl border-b-4 border-indigo-900 btn-bounce transition-all">
+          Jogar Novamente 🔄
+        </button>
+        <button onclick="scrollToRankings()" class="flex-1 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 px-6 rounded-xl border-b-4 border-amber-800 btn-bounce transition-all">
+          Ver Rankings 📊
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- SEÇÃO DE RANKINGS E PLACARES DE SESSÃO -->
+  <section class="bg-slate-900 text-white py-10 px-4 mt-8 relative z-10" id="rankings-section">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-8">
+        <span class="text-4xl">👑</span>
+        <h2 class="text-3xl font-black font-kids tracking-wide text-yellow-400">Classificação das Turmas</h2>
+        <p class="text-slate-400 text-sm mt-1">Resultados competitivos dos alunos do 7º Ano</p>
+      </div>
+
+      <!-- Filtro de sala para o placar -->
+      <div class="flex flex-wrap gap-2 justify-center mb-6">
+        <button onclick="filterLeaderboard('TODAS')" id="btn-filter-TODAS" class="px-4 py-2 rounded-full font-bold text-xs uppercase bg-yellow-400 text-slate-950 transition-all">Geral (Todos)</button>
+        <button onclick="filterLeaderboard('7º Ano A')" id="btn-filter-7A" class="px-4 py-2 rounded-full font-bold text-xs uppercase bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all">7º A</button>
+        <button onclick="filterLeaderboard('7º Ano B')" id="btn-filter-7B" class="px-4 py-2 rounded-full font-bold text-xs uppercase bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all">7º B</button>
+        <button onclick="filterLeaderboard('7º Ano C')" id="btn-filter-7C" class="px-4 py-2 rounded-full font-bold text-xs uppercase bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all">7º C</button>
+        <button onclick="filterLeaderboard('7º Ano D')" id="btn-filter-7D" class="px-4 py-2 rounded-full font-bold text-xs uppercase bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all">7º D</button>
+        <button onclick="filterLeaderboard('7º Ano E')" id="btn-filter-7E" class="px-4 py-2 rounded-full font-bold text-xs uppercase bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all">7º E</button>
+      </div>
+
+      <!-- Tabela de Classificação -->
+      <div class="bg-slate-800 rounded-2xl p-4 sm:p-6 border border-slate-700 shadow-xl overflow-hidden max-w-2xl mx-auto">
+        <div class="flex items-center justify-between border-b border-slate-700 pb-2 mb-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
+          <div class="w-1/12 text-center">Pos</div>
+          <div class="w-5/12 text-left">Aluno</div>
+          <div class="w-3/12 text-center">Turma</div>
+          <div class="w-3/12 text-right">Pontuação</div>
+        </div>
+
+        <div id="leaderboard-container" class="space-y-2 max-h-96 overflow-y-auto pr-1">
+          <!-- Gerado dinamicamente -->
+          <div class="text-center py-6 text-slate-400">Nenhum recorde registrado ainda. Seja o primeiro! 🎯</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rodapé fixo com créditos e placar simplificado do jogador ativo -->
+  <footer class="bg-indigo-950 text-indigo-200 border-t border-indigo-900 py-4 px-6 text-center text-xs relative z-10">
+    <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3">
+      <div>
+        Desenvolvido com carinho para a disciplina de Matemática da <span class="font-bold text-white">Profª Fernanda</span>.
+      </div>
+      <!-- Widget de Status do Jogador Atual na parte inferior -->
+      <div id="footer-player-status" class="hidden items-center gap-2 bg-indigo-900/50 px-4 py-1.5 rounded-full border border-indigo-800">
+        <span class="inline-block w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
+        <span>Jogador Ativo: <strong id="footer-player-name" class="text-white">Lucas</strong> (<strong id="footer-player-class" class="text-amber-300">7º A</strong>)</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Firebase Import -->
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
+    import { getFirestore, doc, setDoc, getDocs, collection, query, limit } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
+
+    // Configuração Firebase (Fornecida dinamicamente pelo ambiente ou fallback mockado local)
+    const firebaseConfig = typeof __firebase_config !== 'undefined' 
+      ? JSON.parse(__firebase_config) 
+      : { apiKey: "", authDomain: "", projectId: "quiz-mock-id", storageBucket: "", messagingSenderId: "", appId: "" };
+    
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'quiz-matematica-7ano';
+    
+    let db = null;
+    let auth = null;
+    let currentUser = null;
+    let currentAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+    // Inicialização segura do Firebase
+    try {
+      const app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+      db = getFirestore(app);
+    } catch(e) {
+      console.warn("Firebase não pôde ser inicializado completamente. O jogo funcionará em modo memória local offline.", e);
+    }
+
+    // Inicialização de Autenticação obrigatória (Regra 3)
+    const initAuth = async () => {
+      if (!auth) return;
+      try {
+        if (currentAuthToken) {
+          await signInWithCustomToken(auth, currentAuthToken);
+        } else {
+          await signInAnonymously(auth);
+        }
+      } catch (err) {
+        console.error("Erro na autenticação:", err);
+      }
+    };
+
+    if (auth) {
+      initAuth();
+      onAuthStateChanged(auth, (user) => {
+        currentUser = user;
+        // Atualiza a tabela após autenticar
+        loadScoresFromFirestore();
+      });
+    }
+
+    // LISTA INTELIGENTE DE TERMOS OFENSIVOS / SEXUAIS / APELIDOS INADEQUADOS (Filtro para estudantes)
+    const BLOCKED_WORDS = [
+      'puta', 'puto', 'caralho', 'porra', 'pinto', 'pica', 'rola', 'bunda', 'cu', 'foder', 'fodas', 'cacete',
+      'buceta', 'penis', 'pênis', 'vagina', 'viado', 'fdp', 'merda', 'bosta', 'sexo', 'safado', 'safada', 'gay',
+      'lesbica', 'idiota', 'retardado', 'corno', 'xana', 'xereca', 'vado', 'canalha', 'bostinha', 'pqp', 'estupido'
+    ];
+
+    // FRASES MOTIVACIONAIS PARA RESPOSTAS CORRETAS
+    const MOTIVATIONAL_PHRASES = [
+      "Incrível! Você está dominando a matemática! 🚀",
+      "Excelente trabalho! A Profª Fernanda está orgulhosa! 👩‍🏫",
+      "Arrasou! Continue com esse foco brilhante! 💡",
+      "Fantástico! Sua mente matemática é afiada! 🧠",
+      "Sensacional! Resposta correta com maestria! ⭐",
+      "Você resolveu isso num piscar de olhos! ⚡",
+      "Parabéns! Sua linha de raciocínio foi perfeita! 🎯",
+      "Genial! Continue brilhando desse jeito! 🌟"
+    ];
+
+    // BANCO DE PERGUNTAS DINÂMICO (Gera exatamente 200 questões de matemática do 7º ano estruturadas)
+    function generateQuestionBank() {
+      const list = [];
+      
+      // Categorias curriculares do 7º ano
+      const C_INTEIROS = "Números Inteiros (Positivos e Negativos)";
+      const C_FRACOES = "Frações e Números Decimais";
+      const C_EQUACOES = "Equações do 1º Grau";
+      const C_PORCENTAGEM = "Porcentagem e Proporcionalidade";
+      const C_GEOMETRIA = "Geometria e Medidas";
+
+      // 1. Números Inteiros (40 questões)
+      for(let i = 1; i <= 40; i++) {
+        let qText = "", ans = 0, opts = [], cat = C_INTEIROS, explanation = "";
+        if (i % 4 === 0) {
+          let a = -5 - (i % 10);
+          let b = 12 + (i % 5);
+          qText = `Calcule a soma dos seguintes números inteiros: (${a}) + (${b}).`;
+          ans = a + b;
+          explanation = `Ao somar (${a}) e (${b}), juntamos os valores respeitando os sinais. Como resultado, temos ${ans}. Lembre-se: sinais iguais somamos e conservamos o sinal; sinais diferentes subtraímos e mantemos o sinal do maior!`;
+        } else if (i % 4 === 1) {
+          let a = -3 * (i % 5 + 1);
+          let b = -2 * (i % 4 + 1);
+          qText = `Qual o resultado da multiplicação entre números inteiros: (${a}) × (${b})?`;
+          ans = a * b;
+          explanation = `Na multiplicação, (${a}) × (${b}) resulta em ${ans}. Multiplicamos os valores absolutos e fazemos o jogo de sinais: "menos com menos" dá "mais"!`;
+        } else if (i % 4 === 2) {
+          let a = -20 - (i % 10);
+          let b = -5 - (i % 5);
+          qText = `Resolva a subtração com sinal: (${a}) - (${b}).`;
+          ans = a - b;
+          explanation = `Subtrair é o mesmo que somar pelo oposto: (${a}) - (${b}) vira (${a}) + (${-b}), o que resulta em ${ans}.`;
+        } else {
+          let temp = (i % 8 + 2);
+          let ansTemp = -3 * (i % 4 + 1);
+          let a = ansTemp * temp;
+          qText = `Efetue a divisão de números inteiros: (${a}) ÷ (${temp}).`;
+          ans = ansTemp;
+          explanation = `Na divisão, (${a}) ÷ (${temp}) resulta em ${ans}. Dividimos os valores normalmente e aplicamos o jogo de sinais: "menos com mais" dá "menos"!`;
+        }
+        opts = [ans, ans + 3, ans - 5, ans * -1].sort(() => Math.random() - 0.5);
+        // Garantir unicidade dos valores nas opções
+        opts = [...new Set(opts)];
+        while(opts.length < 4) {
+          opts.push(opts[0] + opts.length + 1);
+        }
+        opts.sort(() => Math.random() - 0.5);
+        list.push({ id: `int-${i}`, category: cat, question: qText, options: opts, answer: opts.indexOf(ans), explanation: explanation });
+      }
+
+      // 2. Frações e Decimais (40 questões)
+      for(let i = 1; i <= 40; i++) {
+        let qText = "", ans = "", opts = [], cat = C_FRACOES, explanation = "";
+        if (i % 4 === 0) {
+          let num = 3 * i;
+          let den = 12 * i;
+          qText = `Simplifique a fração ${num}/${den} para a sua forma irredutível.`;
+          ans = "1/4";
+          explanation = `Para simplificar a fração ${num}/${den}, dividimos o numerador e o denominador pelo máximo divisor comum, resultando em 1/4.`;
+          opts = ["1/4", "1/2", "3/4", "1/3"];
+        } else if (i % 4 === 1) {
+          let val = 0.25 * (i % 3 + 1);
+          qText = `Transforme o número decimal ${val.toFixed(2)} em uma fração simplificada.`;
+          if (val === 0.25) { 
+            ans = "1/4"; 
+            explanation = "0,25 equivale a 25/100, simplificando por 25 chegamos a 1/4.";
+            opts = ["1/4", "1/2", "2/5", "1/5"]; 
+          } else if (val === 0.50) { 
+            ans = "1/2"; 
+            explanation = "0,50 equivale a 50/100, simplificando por 50 chegamos a 1/2.";
+            opts = ["1/2", "1/3", "2/3", "3/4"]; 
+          } else { 
+            ans = "3/4"; 
+            explanation = "0,75 equivale a 75/100, simplificando por 25 chegamos a 3/4.";
+            opts = ["3/4", "1/4", "1/2", "4/5"]; 
+          }
+        } else if (i % 4 === 2) {
+          let x = i % 5 + 1;
+          qText = `Calcule o valor de 2/3 + ${x}/3.`;
+          let n = 2 + x;
+          ans = `${n}/3`;
+          explanation = `Como os denominadores são iguais, mantemos o denominador (3) e somamos os numeradores: 2 + ${x} = ${n}. Portanto, a resposta é ${ans}.`;
+          opts = [`${n}/3`, `${n}/6`, `${n+1}/3`, `1/${n}`];
+        } else {
+          let preco = 10 * (i % 10 + 1);
+          qText = `Se uma pizza inteira custa R$ ${preco},00, quanto custará 3/4 dessa pizza?`;
+          let valAns = (preco * 3) / 4;
+          ans = `R$ ${valAns.toFixed(2).replace('.', ',')}`;
+          explanation = `Para achar 3/4 de R$ ${preco},00, dividimos o valor total por 4 (R$ ${(preco / 4).toFixed(2).replace('.', ',')} por pedaço) e multiplicamos por 3 pedaços, totalizando ${ans}.`;
+          opts = [
+            `R$ ${valAns.toFixed(2).replace('.', ',')}`,
+            `R$ ${(valAns + 5).toFixed(2).replace('.', ',')}`,
+            `R$ ${(valAns - 10).toFixed(2).replace('.', ',')}`,
+            `R$ ${(preco / 2).toFixed(2).replace('.', ',')}`
+          ];
+        }
+        // Limpar opções duplicadas e embaralhar
+        opts = [...new Set(opts)].sort(() => Math.random() - 0.5);
+        while(opts.length < 4) opts.push("Opção Alternativa");
+        list.push({ id: `frac-${i}`, category: cat, question: qText, options: opts, answer: opts.indexOf(ans), explanation: explanation });
+      }
+
+      // 3. Equações do 1º Grau (40 questões)
+      for(let i = 1; i <= 40; i++) {
+        let qText = "", ans = 0, opts = [], cat = C_EQUACOES, explanation = "";
+        let xVal = i % 10 + 2;
+        if (i % 3 === 0) {
+          let b = 5 * (i % 4 + 1);
+          let res = xVal + b;
+          qText = `Encontre o valor de x na equação: x + ${b} = ${res}.`;
+          ans = xVal;
+          explanation = `Para resolver x + ${b} = ${res}, isolamos o x passando o ${b} subtraindo para o outro lado: x = ${res} - ${b}, resultando em x = ${ans}.`;
+        } else if (i % 3 === 1) {
+          let a = i % 4 + 2;
+          let res = a * xVal;
+          qText = `Resolva a equação de primeiro grau: ${a}x = ${res}.`;
+          ans = xVal;
+          explanation = `Para resolver ${a}x = ${res}, isolamos o x dividindo ambos os lados por ${a}: x = ${res} ÷ ${a}, o que nos dá x = ${ans}.`;
+        } else {
+          let a = 2;
+          let b = i % 5 + 1;
+          let res = (a * xVal) - b;
+          qText = `Qual é o valor da incógnita x na equação: 2x - ${b} = ${res}?`;
+          ans = xVal;
+          explanation = `Para resolver 2x - ${b} = ${res}, primeiro passamos o -${b} somando para o outro lado: 2x = ${res} + ${b} (2x = ${res+b}). Em seguida, dividimos por 2: x = ${res+b} ÷ 2, logo x = ${ans}.`;
+        }
+        opts = [ans, ans + 2, ans - 1, ans * 2].sort(() => Math.random() - 0.5);
+        opts = [...new Set(opts)];
+        while(opts.length < 4) opts.push(opts[0] + opts.length + 1);
+        opts.sort(() => Math.random() - 0.5);
+        list.push({ id: `eq-${i}`, category: cat, question: qText, options: opts, answer: opts.indexOf(ans), explanation: explanation });
+      }
+
+      // 4. Porcentagem e Proporcionalidade (40 questões)
+      for(let i = 1; i <= 40; i++) {
+        let qText = "", ans = "", opts = [], cat = C_PORCENTAGEM, explanation = "";
+        if (i % 3 === 0) {
+          let pct = (i % 3 + 1) * 10; // 10%, 20%, 30%
+          let total = 200;
+          let realAns = (pct / 100) * total;
+          qText = `Quanto equivale ${pct}% de ${total} reais?`;
+          ans = `${realAns} reais`;
+          explanation = `Para calcular ${pct}% de R$ ${total}, multiplicamos o valor pela porcentagem e dividimos por 100: (${total} × ${pct}) ÷ 100 = ${realAns} reais.`;
+          opts = [`${realAns} reais`, `${realAns - 5} reais`, `${realAns + 10} reais`, `${realAns / 2} reais`];
+        } else if (i % 3 === 1) {
+          let desc = 10;
+          let valor = 50 + (i % 10) * 5;
+          let realAns = valor - (valor * desc / 100);
+          qText = `Um brinquedo custa R$ ${valor},00. Se pagar à vista, ganho um desconto de ${desc}%. Quanto pagarei pelo brinquedo?`;
+          ans = `R$ ${realAns.toFixed(2).replace('.', ',')}`;
+          explanation = `O desconto de 10% sobre R$ ${valor.toFixed(2).replace('.', ',')} é de R$ ${(valor * 0.1).toFixed(2).replace('.', ',')}. Subtraindo isso do valor original, pagamos ${ans}.`;
+          opts = [
+            `R$ ${realAns.toFixed(2).replace('.', ',')}`,
+            `R$ ${valor.toFixed(2).replace('.', ',')}`,
+            `R$ ${(realAns - 5).toFixed(2).replace('.', ',')}`,
+            `R$ ${(realAns + 12).toFixed(2).replace('.', ',')}`
+          ];
+        } else {
+          let canetas = 2 + (i % 3);
+          let preco = canetas * 3;
+          let alvo = canetas * 2;
+          let precoAlvo = alvo * 3;
+          qText = `Se ${canetas} canetas custam R$ ${preco},00, quanto vou pagar por ${alvo} canetas idênticas?`;
+          ans = `R$ ${precoAlvo},00`;
+          explanation = `Se ${canetas} canetas custam R$ ${preco},00, cada caneta custa R$ 3,00 (pois ${preco} ÷ ${canetas} = 3). Portanto, ${alvo} canetas custarão ${alvo} × R$ 3,00 = ${ans}.`;
+          opts = [
+            `R$ ${precoAlvo},00`,
+            `R$ ${precoAlvo + 3},00`,
+            `R$ ${precoAlvo - 2},00`,
+            `R$ ${preco * 2},00`
+          ];
+        }
+        opts = [...new Set(opts)].sort(() => Math.random() - 0.5);
+        while(opts.length < 4) opts.push("Opção Aleatória");
+        list.push({ id: `porc-${i}`, category: cat, question: qText, options: opts, answer: opts.indexOf(ans), explanation: explanation });
+      }
+
+      // 5. Geometria e Medidas (40 questões)
+      for(let i = 1; i <= 40; i++) {
+        let qText = "", ans = "", opts = [], cat = C_GEOMETRIA, explanation = "";
+        if (i % 3 === 0) {
+          let lado = i % 8 + 3;
+          let perimetro = lado * 4;
+          qText = `Um quadrado possui lados medindo ${lado} cm. Qual é o perímetro total desse quadrado?`;
+          ans = `${perimetro} cm`;
+          explanation = `O perímetro de qualquer polígono é a soma de todos os seus lados. Como o quadrado tem 4 lados iguais, fazemos 4 × ${lado} cm = ${ans}.`;
+          opts = [`${perimetro} cm`, `${lado * lado} cm²`, `${perimetro + 4} cm`, `${lado * 2} cm`];
+        } else if (i % 3 === 1) {
+          let base = i % 5 + 4;
+          let altura = 3;
+          let area = base * altura;
+          qText = `Qual a área de um terreno retangular que possui ${base} metros de largura e ${altura} metros de comprimento?`;
+          ans = `${area} m²`;
+          explanation = `A área do retângulo é calculada multiplicando a base pela altura (comprimento × largura): ${base} m × ${altura} m = ${ans}.`;
+          opts = [`${area} m²`, `${(base + altura) * 2} m`, `${area - 3} m²`, `${area * 2} m²`];
+        } else {
+          let angulo = 30 + (i % 6) * 10;
+          let compl = 90 - angulo;
+          qText = `Sabendo que dois ângulos são complementares (juntos somam 90°), qual o complementar de um ângulo de ${angulo}°?`;
+          ans = `${compl}°`;
+          explanation = `Dois ângulos são complementares quando a soma de suas medidas é exatamente 90°. Para descobrir o complementar de ${angulo}°, fazemos: 90° - ${angulo}° = ${ans}.`;
+          opts = [`${compl}°`, `${compl + 10}°`, `${180 - angulo}°`, `${90}°`];
+        }
+        opts = [...new Set(opts)].sort(() => Math.random() - 0.5);
+        while(opts.length < 4) opts.push("Opção Aleatória");
+        list.push({ id: `geom-${i}`, category: cat, question: qText, options: opts, answer: opts.indexOf(ans), explanation: explanation });
+      }
+
+      return list;
+    }
+
+    const ALL_QUESTIONS = generateQuestionBank();
+
+    // ESTADO GLOBAL DO JOGO
+    let gameState = {
+      playerName: "",
+      playerClass: "7º Ano A",
+      currentQuestionIndex: 0,
+      selectedQuestions: [], // 10 questões aleatórias selecionadas para esta rodada
+      score: 0,
+      hits: 0,
+      timer: 30,
+      timerInterval: null,
+      hasAnswered: false,
+      activeFilter: "TODAS",
+      rankingMemory: [] // Fallback em memória para caso o Firebase esteja inativo
+    };
+
+    // FUNÇÕES DE VALIDAÇÃO DO NOME (Filtragem robusta contra nomes falsos e inadequados)
+    function validatePlayerName(name) {
+      const cleanName = name.trim().toLowerCase();
+
+      // 1. Verificar tamanho mínimo
+      if (cleanName.length < 3) {
+        return { valid: false, message: "O seu nome precisa ter pelo menos 3 letras." };
+      }
+
+      // 2. Verificar se contém apenas números ou caracteres repetitivos estranhos (ex: "aaaaaa")
+      const repeats = /(.)\1{3,}/; // Letra repetida 4 ou mais vezes consecutivas
+      if (repeats.test(cleanName)) {
+        return { valid: false, message: "Insira um nome válido. Evite repetir a mesma letra várias vezes." };
+      }
+
+      // 3. Verificar se há consoantes demais sem vogais (nomes sem nexo, ex: "bcdfgh")
+      const vowels = /[aeiouyáàâãéèêíïóôõúü]/i;
+      if (!vowels.test(cleanName)) {
+        return { valid: false, message: "O nome inserido parece inválido. Certifique-se de escrever o seu nome real!" };
+      }
+
+      // 4. Filtrar termos obscenos ou sexuais cadastrados
+      for (let word of BLOCKED_WORDS) {
+        // Expressão regular com bordas para verificar a palavra ofensiva isolada ou dentro do nome
+        const regex = new RegExp(`\\b${word}\\b|${word}`, 'i');
+        if (regex.test(cleanName)) {
+          return { valid: false, message: "Não são permitidos nomes com palavras inadequadas, apelidos ofensivos ou termos de duplo sentido!" };
+        }
+      }
+
+      return { valid: true };
+    }
+
+    // CONTROLE DE TELAS
+    function showScreen(screenId) {
+      document.getElementById('screen-login').classList.add('hidden');
+      document.getElementById('screen-quiz').classList.add('hidden');
+      document.getElementById('screen-results').classList.add('hidden');
+      document.getElementById(screenId).classList.remove('hidden');
+    }
+
+    // ALERTA CUSTOMIZADO
+    window.showAlert = function(message) {
+      document.getElementById('alert-message').innerText = message;
+      document.getElementById('custom-alert').classList.remove('hidden');
+    };
+
+    window.closeAlert = function() {
+      playSound('click');
+      document.getElementById('custom-alert').classList.add('hidden');
+    };
+
+    // INICIAR QUIZ
+    window.startQuiz = function() {
+      const nameInput = document.getElementById('player-name').value;
+      const classInput = document.getElementById('player-class').value;
+
+      const validation = validatePlayerName(nameInput);
+      if (!validation.valid) {
+        showAlert(validation.message);
+        return;
+      }
+
+      playSound('click');
+      
+      gameState.playerName = nameInput.trim().toUpperCase();
+      gameState.playerClass = classInput;
+      gameState.score = 0;
+      gameState.hits = 0;
+      gameState.currentQuestionIndex = 0;
+      gameState.hasAnswered = false;
+
+      // Seleciona 10 questões aleatórias do banco de 200
+      gameState.selectedQuestions = [...ALL_QUESTIONS]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 10);
+
+      // Atualiza Status do Footer do Aluno Ativo
+      document.getElementById('footer-player-name').innerText = gameState.playerName;
+      document.getElementById('footer-player-class').innerText = gameState.playerClass;
+      document.getElementById('footer-player-status').classList.remove('hidden');
+      document.getElementById('footer-player-status').classList.add('flex');
+
+      showScreen('screen-quiz');
+      loadQuestion();
+    };
+
+    // CARREGAR UMA QUESTÃO DO VETOR SELECIONADO
+    function loadQuestion() {
+      clearInterval(gameState.timerInterval);
+      gameState.hasAnswered = false;
+      
+      const qNum = gameState.currentQuestionIndex + 1;
+      document.getElementById('current-question-num').innerText = qNum;
+      document.getElementById('quiz-score').innerText = `${gameState.score} pts`;
+      
+      // Atualiza progresso
+      const pct = (qNum / 10) * 100;
+      document.getElementById('progress-bar').style.width = `${pct}%`;
+
+      const qData = gameState.selectedQuestions[gameState.currentQuestionIndex];
+      document.getElementById('question-category').innerText = qData.category;
+      document.getElementById('question-text').innerText = qData.question;
+
+      // Renderiza alternativas
+      const container = document.getElementById('options-container');
+      container.innerHTML = "";
+      
+      qData.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.id = `option-btn-${idx}`;
+        btn.onclick = () => selectOption(idx);
+        btn.className = "w-full text-left bg-indigo-50/60 hover:bg-indigo-100/80 active:bg-indigo-200 text-slate-800 p-4 rounded-2xl border-2 border-indigo-100 transition-all font-semibold flex items-center gap-3 text-sm sm:text-base";
+        
+        // Letra do item
+        const letters = ["A", "B", "C", "D"];
+        btn.innerHTML = `
+          <span class="w-8 h-8 rounded-full bg-indigo-500 text-white font-bold flex items-center justify-center flex-shrink-0">
+            ${letters[idx]}
+          </span>
+          <span class="flex-grow">${opt}</span>
+        `;
+        container.appendChild(btn);
+      });
+
+      // Desabilita botão "Avançar" inicialmente
+      const btnNext = document.getElementById('btn-next');
+      btnNext.disabled = true;
+      btnNext.className = "bg-gray-300 text-gray-500 cursor-not-allowed font-black font-kids text-lg px-8 py-3 rounded-xl border-b-4 border-gray-400 btn-bounce transition-all";
+
+      // Feedback Oculto
+      const feedback = document.getElementById('answer-feedback');
+      feedback.className = "hidden rounded-xl p-4 mb-4 text-center font-bold text-white transition-all";
+
+      // Configuração e Início do Cronômetro (30 Segundos)
+      gameState.timer = 30;
+      document.getElementById('timer-display').innerText = gameState.timer;
+      
+      gameState.timerInterval = setInterval(() => {
+        gameState.timer--;
+        document.getElementById('timer-display').innerText = gameState.timer;
+        if (gameState.timer <= 0) {
+          clearInterval(gameState.timerInterval);
+          autoTimeOut();
+        }
+      }, 1000);
+    }
+
+    // SELECIONAR UMA RESPOSTA
+    function selectOption(index) {
+      if (gameState.hasAnswered) return;
+      gameState.hasAnswered = true;
+      clearInterval(gameState.timerInterval);
+
+      const qData = gameState.selectedQuestions[gameState.currentQuestionIndex];
+      const isCorrect = (index === qData.answer);
+      
+      // Feedback Visual
+      const feedback = document.getElementById('answer-feedback');
+      feedback.classList.remove('hidden');
+
+      const correctBtn = document.getElementById(`option-btn-${qData.answer}`);
+      
+      if (isCorrect) {
+        playSound('correct');
+        gameState.hits++;
+        // Pontuação baseada no tempo restante
+        const timeBonus = gameState.timer * 5;
+        const pts = 100 + timeBonus;
+        gameState.score += pts;
+
+        // Estiliza opção correta
+        const selectedBtn = document.getElementById(`option-btn-${index}`);
+        selectedBtn.classList.remove('bg-indigo-50/60', 'border-indigo-100');
+        selectedBtn.classList.add('bg-emerald-100', 'border-emerald-500', 'text-emerald-950', 'ring-4', 'ring-emerald-200');
+        
+        feedback.classList.add('bg-emerald-500');
+        // Sorteia frase motivacional
+        const phrase = MOTIVATIONAL_PHRASES[Math.floor(Math.random() * MOTIVATIONAL_PHRASES.length)];
+        feedback.innerHTML = `🌟 ${phrase} <span class="block text-sm font-semibold mt-1">(+${pts} pts!)</span>`;
+      } else {
+        playSound('wrong');
+        // Estiliza opção incorreta
+        const selectedBtn = document.getElementById(`option-btn-${index}`);
+        selectedBtn.classList.remove('bg-indigo-50/60', 'border-indigo-100');
+        selectedBtn.classList.add('bg-rose-100', 'border-rose-500', 'text-rose-950', 'ring-4', 'ring-rose-200');
+
+        // Mostra a correta também
+        correctBtn.classList.remove('bg-indigo-50/60', 'border-indigo-100');
+        correctBtn.classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-950');
+
+        feedback.classList.add('bg-rose-500');
+        // Exibe a resposta certa seguida de uma explicação de como chegar a ela
+        feedback.innerHTML = `❌ Ops, resposta errada! A resposta correta era: <strong>${qData.options[qData.answer]}</strong>.<br><span class="text-xs font-normal block mt-1.5 bg-black/10 p-2 rounded-lg text-left leading-relaxed">💡 <strong>Explicação:</strong> ${qData.explanation}</span>`;
+      }
+
+      // Habilita o botão Avançar
+      const btnNext = document.getElementById('btn-next');
+      btnNext.disabled = false;
+      btnNext.className = "bg-indigo-600 hover:bg-indigo-700 text-white font-black font-kids text-lg px-8 py-3 rounded-xl border-b-4 border-indigo-900 btn-bounce transition-all cursor-pointer";
+    }
+
+    // ESTOURO DO TEMPO LIMITE
+    function autoTimeOut() {
+      gameState.hasAnswered = true;
+      playSound('wrong');
+
+      const qData = gameState.selectedQuestions[gameState.currentQuestionIndex];
+      const correctBtn = document.getElementById(`option-btn-${qData.answer}`);
+      
+      correctBtn.classList.remove('bg-indigo-50/60', 'border-indigo-100');
+      correctBtn.classList.add('bg-emerald-100', 'border-emerald-400', 'text-emerald-950');
+
+      const feedback = document.getElementById('answer-feedback');
+      feedback.classList.remove('hidden');
+      feedback.classList.add('bg-amber-500');
+      // Adiciona explicação quando o tempo do aluno esgota
+      feedback.innerHTML = `⏰ O Tempo acabou! A resposta correta era: <strong>${qData.options[qData.answer]}</strong>.<br><span class="text-xs font-normal block mt-1.5 bg-black/10 p-2 rounded-lg text-left leading-relaxed">💡 <strong>Explicação:</strong> ${qData.explanation}</span>`;
+
+      const btnNext = document.getElementById('btn-next');
+      btnNext.disabled = false;
+      btnNext.className = "bg-indigo-600 hover:bg-indigo-700 text-white font-black font-kids text-lg px-8 py-3 rounded-xl border-b-4 border-indigo-900 btn-bounce transition-all cursor-pointer";
+    }
+
+    // PRÓXIMA QUESTÃO OU RESULTADOS
+    window.nextQuestion = function() {
+      playSound('click');
+      gameState.currentQuestionIndex++;
+      
+      if (gameState.currentQuestionIndex < 10) {
+        loadQuestion();
+      } else {
+        finishQuiz();
+      }
+    };
+
+    // CONCLUIR QUIZ E SALVAR PONTUAÇÃO
+    async function finishQuiz() {
+      clearInterval(gameState.timerInterval);
+      playSound('victory');
+      showScreen('screen-results');
+
+      // Atualiza painel do Aluno
+      document.getElementById('result-greeting').innerText = `Muito bem, ${gameState.playerName}!`;
+      document.getElementById('result-hits').innerText = `${gameState.hits}/10`;
+      document.getElementById('result-points').innerText = `${gameState.score} pts`;
+
+      // Efeito confete
+      triggerConfetti();
+
+      // Envia pontuação ao Firestore de forma segura (Regra 1 e Regra 3)
+      const scoreObj = {
+        name: gameState.playerName,
+        classroom: gameState.playerClass,
+        score: gameState.score,
+        hits: gameState.hits,
+        timestamp: Date.now()
+      };
+
+      if (db && currentUser) {
+        try {
+          // Caminho restrito exigido pela REGRA 1
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'scores', `${currentUser.uid}_${Date.now()}`);
+          await setDoc(docRef, scoreObj);
+          // Recarrega lista atualizada
+          loadScoresFromFirestore();
+        } catch (e) {
+          console.error("Erro ao salvar no Firestore: ", e);
+          saveScoreLocally(scoreObj);
+        }
+      } else {
+        saveScoreLocally(scoreObj);
+      }
+    }
+
+    // SALVAMENTO DE RECURSO LOCAL (FALLBACK SE SEM FIREBASE)
+    function saveScoreLocally(scoreObj) {
+      gameState.rankingMemory.push(scoreObj);
+      renderLeaderboard(gameState.rankingMemory);
+    }
+
+    // BUSCA DE REGISTROS DO FIRESTORE (Em conformidade com a Regra 2)
+    async function loadScoresFromFirestore() {
+      if (!db || !currentUser) return;
+      try {
+        // Regra 2: Busca simplificada e ordenamento manual no javascript local
+        const scoresRef = collection(db, 'artifacts', appId, 'public', 'data', 'scores');
+        const querySnapshot = await getDocs(scoresRef);
+        const fetchedScores = [];
+        querySnapshot.forEach((doc) => {
+          fetchedScores.push(doc.data());
+        });
+        
+        // Atualiza a memória de rankings
+        gameState.rankingMemory = fetchedScores;
+        renderLeaderboard(fetchedScores);
+      } catch (err) {
+        console.error("Falha ao recuperar rankings do Firestore: ", err);
+      }
+    }
+
+    // RENDERIZAR QUADRO DE LÍDERES (LÓGICA EM MEMÓRIA / REGRA 2)
+    function renderLeaderboard(scores) {
+      const container = document.getElementById('leaderboard-container');
+      container.innerHTML = "";
+
+      // Filtra de acordo com a sala selecionada no widget de rankings
+      let filtered = [...scores];
+      if (gameState.activeFilter !== "TODAS") {
+        filtered = filtered.filter(s => s.classroom === gameState.activeFilter);
+      }
+
+      // Ordenação: Maior pontuação primeiro, depois timestamp mais antigo para desempate
+      filtered.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return a.timestamp - b.timestamp;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="text-center py-6 text-slate-400">Nenhum recorde registrado para ${gameState.activeFilter} ainda.</div>`;
+        return;
+      }
+
+      // Mostrar no máximo as 50 melhores marcas do placar
+      const maxLeaderboard = filtered.slice(0, 50);
+
+      maxLeaderboard.forEach((item, index) => {
+        const itemDiv = document.createElement('div');
+        
+        // Destaque para top 3 posições
+        let medal = `${index + 1}`;
+        let bgStyle = "bg-slate-800/60";
+        let textStyle = "text-slate-200";
+        if (index === 0) { medal = "🥇"; bgStyle = "bg-amber-400/20 border-amber-500/50"; textStyle = "text-yellow-400 font-extrabold"; }
+        else if (index === 1) { medal = "🥈"; bgStyle = "bg-slate-300/20 border-slate-400/50"; textStyle = "text-slate-300 font-bold"; }
+        else if (index === 2) { medal = "🥉"; bgStyle = "bg-amber-700/20 border-amber-800/50"; textStyle = "text-amber-500 font-bold"; }
+
+        itemDiv.className = `flex items-center justify-between p-3 rounded-xl border border-slate-700/50 ${bgStyle} transition-all duration-200`;
+        itemDiv.innerHTML = `
+          <div class="w-1/12 text-center text-lg font-black">${medal}</div>
+          <div class="w-5/12 text-left truncate font-semibold uppercase pr-2 ${textStyle}">${item.name}</div>
+          <div class="w-3/12 text-center text-xs text-slate-400 font-bold">${item.classroom}</div>
+          <div class="w-3/12 text-right text-emerald-400 font-black tracking-wide">${item.score} pts</div>
+        `;
+        container.appendChild(itemDiv);
+      });
+    }
+
+    // SELEÇÃO DE FILTROS DO PLACAR
+    window.filterLeaderboard = function(target) {
+      playSound('click');
+      gameState.activeFilter = target;
+
+      // Reseta botões visuais
+      const ids = ["TODAS", "7A", "7B", "7C", "7D", "7E"];
+      const names = ["TODAS", "7º Ano A", "7º Ano B", "7º Ano C", "7º Ano D", "7º Ano E"];
+      
+      ids.forEach((id, index) => {
+        const btn = document.getElementById(`btn-filter-${id}`);
+        if (names[index] === target || id === target) {
+          btn.className = "px-4 py-2 rounded-full font-bold text-xs uppercase bg-yellow-400 text-slate-950 transition-all";
+        } else {
+          btn.className = "px-4 py-2 rounded-full font-bold text-xs uppercase bg-slate-800 hover:bg-slate-700 text-slate-200 transition-all";
+        }
+      });
+
+      renderLeaderboard(gameState.rankingMemory);
+    };
+
+    // JOGAR NOVAMENTE
+    window.restartGame = function() {
+      playSound('click');
+      showScreen('screen-login');
+    };
+
+    // ROLAGEM SUAVE PARA O RANKING
+    window.scrollToRankings = function() {
+      playSound('click');
+      document.getElementById('rankings-section').scrollIntoView({ behavior: 'smooth' });
+    };
+
+    // GERADOR DE CONFETES COMEMORATIVOS
+    function triggerConfetti() {
+      const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#8b5cf6', '#6366f1', '#3b82f6', '#0ea5e9', '#10b981', '#f59e0b'];
+      for (let i = 0; i < 80; i++) {
+        const confetti = document.createElement('div');
+        confetti.className = 'confetti';
+        confetti.style.left = `${Math.random() * 100}vw`;
+        confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        confetti.style.transform = `scale(${Math.random() * 0.7 + 0.5})`;
+        confetti.style.top = `-10px`;
+        confetti.style.animationDuration = `${Math.random() * 2 + 1.5}s`;
+        confetti.style.animationDelay = `${Math.random() * 1}s`;
+        document.body.appendChild(confetti);
+        
+        // Remove após voar
+        setTimeout(() => {
+          confetti.remove();
+        }, 4000);
+      }
+    }
+  </script>
+</body>
+</html>
